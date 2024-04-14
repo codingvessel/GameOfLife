@@ -14,12 +14,17 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 public class GameOfLife extends Game {
+
+    public static final int SCREEN_WIDTH = 1920;
+    public static final int SCREEN_HEIGHT = 1200;
 
     public static final int CELL_SIZE = 16;
     public static final int COLUMNS = 120;
@@ -28,6 +33,8 @@ public class GameOfLife extends Game {
     private ShapeRenderer shapeRenderer;
     private SpriteBatch batch;
     public BitmapFont font;
+
+    private Viewport viewport;
     private OrthographicCamera camera;
 
     private Map<Vector2, Cell> grid = new HashMap<>();
@@ -39,16 +46,20 @@ public class GameOfLife extends Game {
     private static final float TICK_DURATION = 1.0f / 10f;
     private float elapsedTime = 0;
 
-
     @Override
     public void create() {
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        viewport = new FitViewport(SCREEN_WIDTH, SCREEN_HEIGHT, camera);
         batch = new SpriteBatch();
         font = new BitmapFont();
         shapeRenderer = new ShapeRenderer();
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, 1920, 1200);
-
         initGrid();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height);
     }
 
     private void initGrid() {
@@ -67,9 +78,10 @@ public class GameOfLife extends Game {
         ScreenUtils.clear(0.35f, 0.35f, 0.35f, 1);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        batch.setProjectionMatrix(camera.combined);
+        shapeRenderer.setProjectionMatrix(camera.combined);
 
         handleInputs();
-
 
         elapsedTime += Gdx.graphics.getDeltaTime();
 
@@ -77,7 +89,6 @@ public class GameOfLife extends Game {
             elapsedTime -= TICK_DURATION;
             gameTick();
         }
-
 
         drawCells();
         drawLines();
@@ -92,6 +103,44 @@ public class GameOfLife extends Game {
 
         batch.end();
         camera.update();
+    }
+
+    private void handleInputs() {
+        if (Gdx.input.isTouched() && !simulate) {
+            Vector3 touchPos = new Vector3();
+            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+            viewport.unproject(touchPos);
+            int xPos = MathUtils.floor(touchPos.x) / CELL_SIZE;
+            int YPos = MathUtils.floor(touchPos.y) / CELL_SIZE;
+            Cell cell = grid.get(new Vector2(xPos, YPos));
+
+            if (isWithinBounds(xPos, YPos)) {
+                if (Gdx.input.isButtonPressed(Buttons.LEFT)) {
+                    if (cell != null) {
+                        cell.setAlive(true);
+                    }
+                } else if (Gdx.input.isButtonPressed(Buttons.RIGHT)) {
+                    if (cell != null) {
+                        cell.setAlive(false);
+                    }
+                }
+            }
+
+        }
+
+        if (Gdx.input.isKeyJustPressed(Keys.SPACE)) {
+            simulate = true;
+        }
+
+        if (Gdx.input.isKeyJustPressed(Keys.R)) {
+            simulate = false;
+            generation = 0;
+            grid.forEach((key, value) -> value.setAlive(false));
+        }
+    }
+
+    private static boolean isWithinBounds(int xPos, int YPos) {
+        return xPos >= 0 && xPos < COLUMNS && YPos >= 0 && YPos < ROWS;
     }
 
     private void gameTick() {
@@ -117,36 +166,6 @@ public class GameOfLife extends Game {
             copiedGrid.put(key, value);
         }
         return copiedGrid;
-    }
-
-    private void handleInputs() {
-        if (Gdx.input.isTouched() && !simulate) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
-            Cell cell = grid.get(new Vector2(MathUtils.floor(touchPos.x / CELL_SIZE), MathUtils.floor(touchPos.y / CELL_SIZE)));
-
-            if (Gdx.input.isButtonPressed(Buttons.LEFT)) {
-                if (cell != null) {
-                    cell.setAlive(true);
-                }
-            } else if (Gdx.input.isButtonPressed(Buttons.RIGHT)) {
-                if (cell != null) {
-                    cell.setAlive(false);
-                }
-            }
-
-        }
-
-        if (Gdx.input.isKeyJustPressed(Keys.SPACE)) {
-            simulate = true;
-        }
-
-        if (Gdx.input.isKeyJustPressed(Keys.R)) {
-            simulate = false;
-            generation = 0;
-            grid.forEach((key, value) -> value.setAlive(false));
-        }
     }
 
     private void applyRules(Map<Vector2, Cell> copiedGrid) {
@@ -176,17 +195,14 @@ public class GameOfLife extends Game {
         shapeRenderer.begin(ShapeType.Line);
         shapeRenderer.setColor(1, 1, 1, 0.3f);
 
-        float screenWidth = Gdx.graphics.getWidth();
-        float screenHeight = Gdx.graphics.getHeight();
-
         for (int i = 0; i <= COLUMNS; i++) {
             float x = i * CELL_SIZE;
-            shapeRenderer.line(x, 0, x, screenHeight);
+            shapeRenderer.line(x, 0, x, SCREEN_HEIGHT);
         }
 
         for (int i = 0; i <= ROWS; i++) {
             float y = i * CELL_SIZE;
-            shapeRenderer.line(0, y, screenWidth, y);
+            shapeRenderer.line(0, y, SCREEN_WIDTH, y);
         }
 
         shapeRenderer.end();
