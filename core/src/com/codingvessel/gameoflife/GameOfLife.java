@@ -49,7 +49,7 @@ public class GameOfLife extends Game {
     @Override
     public void create() {
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.setToOrtho(false, SCREEN_WIDTH, SCREEN_HEIGHT);
         viewport = new FitViewport(SCREEN_WIDTH, SCREEN_HEIGHT, camera);
         batch = new SpriteBatch();
         font = new BitmapFont();
@@ -102,7 +102,6 @@ public class GameOfLife extends Game {
         font.draw(batch, "Press 'Space' to start lifecycle, 'R' to Reset", 0, SCREEN_HEIGHT - 2 * CELL_SIZE);
 
         batch.end();
-        camera.update();
     }
 
     private void handleInputs() {
