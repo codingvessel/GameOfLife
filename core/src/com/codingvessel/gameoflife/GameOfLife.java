@@ -212,5 +212,6 @@ public class GameOfLife extends Game {
     public void dispose() {
         batch.dispose();
         shapeRenderer.dispose();
+        font.dispose();
     }
 }
