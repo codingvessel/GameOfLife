@@ -95,11 +95,11 @@ public class GameOfLife extends Game {
 
         long livingCellsCounter = grid.entrySet().stream().filter(e -> e.getValue().isAlive()).count();
         batch.begin();
-        font.draw(batch, "Living Cells: " + livingCellsCounter, (float) Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight());
-        font.draw(batch, "Generation: " + generation, (float) Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() - CELL_SIZE);
-        font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 0, Gdx.graphics.getHeight());
-        font.draw(batch, "LMB to set Cell alive, RMB to set Cell dead", 0, Gdx.graphics.getHeight() - CELL_SIZE);
-        font.draw(batch, "Press 'Space' to start lifecycle, 'R' to Reset", 0, Gdx.graphics.getHeight() - 2 * CELL_SIZE);
+        font.draw(batch, "Living Cells: " + livingCellsCounter, (float) SCREEN_WIDTH / 2, SCREEN_HEIGHT);
+        font.draw(batch, "Generation: " + generation, (float) SCREEN_WIDTH / 2, SCREEN_HEIGHT - CELL_SIZE);
+        font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 0, SCREEN_HEIGHT);
+        font.draw(batch, "LMB to set Cell alive, RMB to set Cell dead", 0, SCREEN_HEIGHT - CELL_SIZE);
+        font.draw(batch, "Press 'Space' to start lifecycle, 'R' to Reset", 0, SCREEN_HEIGHT - 2 * CELL_SIZE);
 
         batch.end();
         camera.update();
